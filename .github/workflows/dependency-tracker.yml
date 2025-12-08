@@ -1,0 +1,109 @@
+name: Dependency Tracker
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  unblock-dependents:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Unblock dependent issues
+        run: |
+          # Extract issue number from branch name (claude/issue-X-...)
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          ISSUE_NUM=$(echo "$BRANCH" | grep -oP 'issue-\K\d+' || true)
+
+          if [ -z "$ISSUE_NUM" ]; then
+            echo "No issue number found in branch name"
+            exit 0
+          fi
+
+          echo "PR merged for issue #$ISSUE_NUM"
+
+          # Close the original issue
+          gh issue close "$ISSUE_NUM" -R "${{ github.repository }}" --comment "Completed via PR #${{ github.event.pull_request.number }}" || true
+
+          # Function to unblock an issue (add ready-to-process label and @claude comment)
+          unblock_issue() {
+            local NUM=$1
+            echo "Unblocking issue #$NUM"
+            gh issue edit "$NUM" -R "${{ github.repository }}" --remove-label "blocked" --add-label "ready-to-process"
+            gh issue comment "$NUM" -R "${{ github.repository }}" --body $'Dependencies resolved. Ready for implementation.\n\n@claude'
+          }
+
+          # Find issues that depend on this one (search for "Dependencies: #X" in body)
+          DEPENDENT_ISSUES=$(gh issue list -R "${{ github.repository }}" --state open --label "blocked" --json number,body \
+            --jq ".[] | select(.body | contains(\"#$ISSUE_NUM\")) | .number")
+
+          for DEP_ISSUE in $DEPENDENT_ISSUES; do
+            echo "Checking if issue #$DEP_ISSUE can be unblocked..."
+
+            # Get the issue body to check all dependencies
+            BODY=$(gh issue view "$DEP_ISSUE" -R "${{ github.repository }}" --json body --jq '.body')
+
+            # Extract all dependency issue numbers
+            DEPS=$(echo "$BODY" | grep -oP 'Dependencies:\s*#?\K[\d, #]+' | tr ',' '\n' | grep -oP '\d+' || true)
+
+            ALL_RESOLVED=true
+            for DEP in $DEPS; do
+              STATE=$(gh issue view "$DEP" -R "${{ github.repository }}" --json state --jq '.state')
+              if [ "$STATE" != "CLOSED" ]; then
+                ALL_RESOLVED=false
+                break
+              fi
+            done
+
+            if [ "$ALL_RESOLVED" = true ]; then
+              unblock_issue "$DEP_ISSUE"
+            fi
+          done
+
+          # Check if phase is complete and advance to next
+          MERGED_PHASE=$(gh issue view "$ISSUE_NUM" -R "${{ github.repository }}" --json labels --jq '.labels[].name | select(startswith("phase-"))' | head -1 || true)
+          if [ -n "$MERGED_PHASE" ]; then
+            # Count remaining open issues in this phase
+            REMAINING=$(gh issue list -R "${{ github.repository }}" --state open --label "$MERGED_PHASE" --json number --jq 'length')
+            if [ "$REMAINING" -eq 0 ]; then
+              echo "Phase $MERGED_PHASE complete!"
+
+              # Get next phase number
+              PHASE_NUM=$(echo "$MERGED_PHASE" | grep -oP '\d+')
+              NEXT_PHASE="phase-$((PHASE_NUM + 1))"
+
+              # Unblock all issues in next phase that have no dependencies or only deps from previous phases
+              NEXT_ISSUES=$(gh issue list -R "${{ github.repository }}" --state open --label "$NEXT_PHASE" --label "blocked" --json number,body || echo "[]")
+              echo "$NEXT_ISSUES" | jq -c '.[]' | while read -r ISSUE_JSON; do
+                NUM=$(echo "$ISSUE_JSON" | jq -r '.number')
+                BODY=$(echo "$ISSUE_JSON" | jq -r '.body')
+
+                # Extract dependencies
+                DEPS=$(echo "$BODY" | grep -oP 'Dependencies:\s*#?\K[\d, #]+' | tr ',' '\n' | grep -oP '\d+' || true)
+
+                if [ -z "$DEPS" ]; then
+                  echo "Unblocking issue #$NUM (no dependencies)"
+                  unblock_issue "$NUM"
+                else
+                  # Check if all dependencies are closed
+                  ALL_CLOSED=true
+                  for DEP in $DEPS; do
+                    STATE=$(gh issue view "$DEP" -R "${{ github.repository }}" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+                    if [ "$STATE" != "CLOSED" ]; then
+                      ALL_CLOSED=false
+                      break
+                    fi
+                  done
+
+                  if [ "$ALL_CLOSED" = true ]; then
+                    echo "Unblocking issue #$NUM (all dependencies closed)"
+                    unblock_issue "$NUM"
+                  fi
+                fi
+              done
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
