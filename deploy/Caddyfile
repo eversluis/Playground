@@ -1,0 +1,31 @@
+{
+	email {$EMAIL}
+}
+
+{$DOMAIN} {
+	# Frontend app
+	handle /app* {
+		reverse_proxy app:3000
+	}
+
+	# Backend API
+	handle /api* {
+		reverse_proxy api:8000
+	}
+
+	# Auth service
+	handle /auth* {
+		reverse_proxy auth:4000
+	}
+
+	# Default: send everything else to the app
+	handle {
+		reverse_proxy app:3000
+	}
+
+	encode gzip
+
+	log {
+		output file /data/access.log
+	}
+}
