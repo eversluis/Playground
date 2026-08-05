@@ -1,0 +1,11 @@
+{
+  "name": "voice-note-backend",
+  "version": "0.1.0",
+  "description": "Backend for the voice note app: note confirmation and sync endpoint",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  }
+}

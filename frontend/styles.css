@@ -1,0 +1,111 @@
+:root {
+  color-scheme: light dark;
+  --border: #d0d5dd;
+  --accent: #2563eb;
+  --danger: #6b7280;
+  --bg-subtle: #f8fafc;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: #1f2937;
+}
+
+.note-review h1 {
+  font-size: 1.5rem;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.field .hint {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.field input {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.field.readonly span {
+  padding: 0.5rem 0;
+  color: #374151;
+}
+
+.preview {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--bg-subtle);
+}
+
+.preview h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+.markdown-body {
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--border);
+}
+
+#status {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+#status.success {
+  color: #15803d;
+}
+
+#status.error {
+  color: #b91c1c;
+}
