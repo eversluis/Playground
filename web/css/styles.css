@@ -1,0 +1,154 @@
+:root {
+  color-scheme: dark;
+  --bg: #141625;
+  --surface: #1d2135;
+  --accent: #ff5a5f;
+  --accent-active: #ff787c;
+  --text: #f4f4f8;
+  --text-dim: #9a9db3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+}
+
+.app__header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.status {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.status--recording {
+  color: var(--accent);
+}
+
+.recorder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1.5rem;
+}
+
+.waveform {
+  width: 100%;
+  max-width: 420px;
+  height: 120px;
+  background: var(--surface);
+  border-radius: 16px;
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.record-button {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 4px solid var(--accent);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
+}
+
+.record-button:active {
+  transform: scale(0.95);
+}
+
+.record-button__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+}
+
+.record-button[aria-pressed='true'] {
+  background: rgba(255, 90, 95, 0.12);
+}
+
+.record-button[aria-pressed='true'] .record-button__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--accent-active);
+}
+
+.error {
+  color: var(--accent);
+  text-align: center;
+  font-size: 0.9rem;
+  max-width: 360px;
+}
+
+.app__footer {
+  padding: 1rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.install-hint {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
