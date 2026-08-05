@@ -74,6 +74,22 @@ Transform ArchStudio into a voice-to-Obsidian note-taking application, maximizin
 - All external API calls through backend proxy
 - Minimal repository permissions requested
 
+### Audio Cleanup Policy
+No audio data may be persisted to disk or any datastore, at any stage of the pipeline. This applies to the client, the backend proxy, and any downstream service (Groq STT).
+
+**Data flow (audio never touches disk):**
+1. Client captures audio via the browser's microphone APIs and streams it in-memory to the backend proxy over the existing authenticated connection (WebSocket/SSE per the Voice Capture Flow above). The client does not write the recording to local storage.
+2. The backend proxy receives audio chunks into memory only (request body buffer / stream) and forwards them directly to the Groq STT API. The backend must not write incoming audio to a temp file, log file, or database, and must not include raw audio in structured logs.
+3. Once Groq returns the transcription, the backend discards the in-memory audio buffer. Only the resulting text is retained, and it flows into the existing Note Refinement Workflow (LLM prompt chain → Git commit).
+4. If a request fails or the connection drops mid-stream, buffered audio for that request must still be discarded (not flushed to disk as part of error handling/retry logic).
+
+**Enforcement:**
+- Code review checklist item for the transcription service: confirm no `fs.writeFile`/temp-file APIs are used anywhere in the audio-handling path, and that audio buffers are scoped to the request lifecycle only (no caching, no queueing to disk-backed storage).
+- Add an integration test that drives an audio clip through the transcription endpoint and then asserts the filesystem and any temp directories are unchanged (no new files) before and after the request, including on error paths.
+- Logging must redact/exclude raw audio payloads; only metadata (duration, size, request id) may be logged.
+
+This policy has no corresponding implementation yet — the transcription service and backend proxy described in this document have not been built in this repository. The checklist above should be applied during the code review and test-writing pass once that implementation lands.
+
 ## Code Reuse Strategy
 
 ### Backend (~70% reuse)
