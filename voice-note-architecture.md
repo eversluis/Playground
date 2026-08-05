@@ -109,3 +109,46 @@ Transform ArchStudio into a voice-to-Obsidian note-taking application, maximizin
 6. **Hands-Free Mode**: Voice-activated recording (reused)
 
 This architecture maximizes code reuse while providing a focused voice-note experience with secure Git integration.
+
+## Audio Cleanup Policy
+
+Raw audio is privacy-sensitive and must never be persisted, at any layer of
+the pipeline. This section defines the policy and points at its enforcement.
+
+### Data Flow
+1. **Client**: Audio is captured to an in-memory buffer/stream (e.g.
+   `MediaRecorder` blob) and sent directly to the backend proxy over the
+   request body. It is never written to browser storage (no IndexedDB,
+   no download-to-disk step).
+2. **Backend proxy**: The request body is read into memory
+   (`UploadFile.read()` -> `bytes`) and forwarded to the Groq STT API as a
+   multipart upload constructed from an in-memory `io.BytesIO` buffer. No
+   temp file, disk cache, or object storage write happens at this step.
+3. **Groq STT API**: Returns a text transcript. The audio bytes and the
+   in-memory buffer go out of scope (and are explicitly dereferenced) once
+   the request completes.
+4. **Downstream**: Only the text transcript continues into the LLM
+   refinement / Git-commit workflow. Audio never reaches that stage.
+
+### Error Path
+If the upstream Groq request fails, times out, or the client disconnects
+mid-stream, the buffered audio is discarded the same way as the success
+path (`finally` cleanup) - it is not flushed to disk for retry, debugging,
+or caching purposes.
+
+### Enforcement Checklist (code review)
+- No `fs.writeFile` / `open(..., "w")` / `tempfile.*` / disk-cache APIs
+  anywhere in the audio-handling path.
+- No raw audio bytes (or base64-encoded audio) written to application logs.
+- No audio blobs stored in the database, object storage, or browser storage.
+- Buffers are read once and go out of scope immediately after the upstream
+  call, on both the success and error paths.
+
+### Implementation & Test
+- Implementation: [`backend/app/transcription.py`](backend/app/transcription.py)
+  and [`backend/app/main.py`](backend/app/main.py) - the `/api/transcribe`
+  proxy endpoint, built around in-memory `bytes/io.BytesIO` only.
+- Automated test:
+  [`backend/tests/test_transcription_cleanup.py`](backend/tests/test_transcription_cleanup.py) -
+  snapshots the OS temp directory and repo tree before/after a transcription
+  request (success and failure paths) and asserts neither changed.
