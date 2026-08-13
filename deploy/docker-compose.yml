@@ -1,0 +1,61 @@
+version: "3.8"
+
+# VPS base stack: Caddy reverse proxy with automatic HTTPS via Let's Encrypt.
+# App/API/auth services are added below as they're built; Caddy already
+# routes /app, /api, /auth to their expected upstreams (see Caddyfile).
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+
+  # Example service definitions — uncomment and adjust once the
+  # corresponding app/api/auth services exist in this repo.
+  #
+  # app:
+  #   build: ../app
+  #   container_name: app
+  #   restart: unless-stopped
+  #   expose:
+  #     - "3000"
+  #   networks:
+  #     - web
+  #
+  # api:
+  #   build: ../api
+  #   container_name: api
+  #   restart: unless-stopped
+  #   expose:
+  #     - "8000"
+  #   networks:
+  #     - web
+  #
+  # auth:
+  #   build: ../auth
+  #   container_name: auth
+  #   restart: unless-stopped
+  #   expose:
+  #     - "4000"
+  #   networks:
+  #     - web
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
