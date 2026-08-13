@@ -28,6 +28,7 @@ Transform ArchStudio into a voice-to-Obsidian note-taking application, maximizin
 
 ### 4. Note Refinement Workflow
 **Decision: Always Refine with Prompts**
+- Before recording, the user selects a note-taking mode (see [`/prompts/`](prompts/README.md)) that guides the live conversation
 - User captures voice note through conversation
 - Can end capture via voice command or button
 - LLM always processes note through prompt chain:
