@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Voice Notes</title>
+
+  <meta name="description" content="Record voice notes and stream them straight to the server." />
+  <meta name="theme-color" content="#141625" />
+
+  <!-- iOS PWA support -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Voice Notes" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app__header">
+      <h1>Voice Notes</h1>
+      <span id="status" class="status" role="status" aria-live="polite">Ready</span>
+    </header>
+
+    <main class="recorder">
+      <canvas id="waveform" class="waveform" width="600" height="160" aria-hidden="true"></canvas>
+
+      <div id="timer" class="timer" aria-live="off">00:00</div>
+
+      <button id="recordButton" class="record-button" type="button" aria-pressed="false">
+        <span class="record-button__icon" aria-hidden="true"></span>
+        <span class="sr-only">Start recording</span>
+      </button>
+
+      <p id="errorMessage" class="error" role="alert" hidden></p>
+    </main>
+
+    <footer class="app__footer">
+      <p id="installHint" class="install-hint" hidden>
+        Install this app: use your browser's "Add to Home Screen" / install option.
+      </p>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
