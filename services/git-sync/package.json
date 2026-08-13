@@ -1,0 +1,12 @@
+{
+  "name": "git-sync-service",
+  "version": "1.0.0",
+  "description": "Writes markdown notes into an Obsidian vault and syncs them via Git commit + push",
+  "main": "src/gitSyncService.js",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "simple-git": "^3.27.0"
+  }
+}
